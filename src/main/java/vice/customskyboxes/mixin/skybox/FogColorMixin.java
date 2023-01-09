@@ -1,7 +1,7 @@
 package vice.customskyboxes.mixin.skybox;
 
-import net.minecraft.client.renderer.ActiveRenderInfo;
-import net.minecraft.client.world.ClientWorld;
+import net.minecraft.client.Camera;
+import net.minecraft.client.multiplayer.ClientLevel;
 import vice.customskyboxes.SkyboxManager;
 import net.minecraft.client.renderer.FogRenderer;
 import org.spongepowered.asm.mixin.Mixin;
@@ -28,7 +28,7 @@ public class FogColorMixin
     //@Inject(method = "setupColor", at = @At(value = "FIELD", target = "biomeC", ordinal = 5))
 
     @Inject(method = "setupColor", at = @At("HEAD"), cancellable = true)
-    private static void modifyColors(ActiveRenderInfo camera, float tickDelta, ClientWorld world, int i, float f, CallbackInfo ci) {
+    private static void modifyColors(Camera pActiveRenderInfo, float pPartialTicks, ClientLevel pLevel, int pRenderDistanceChunks, float pBossColorModifier, CallbackInfo ci) {
         if (SkyboxManager.shouldChangeFog)
         {
             fogRed = SkyboxManager.fogRed;

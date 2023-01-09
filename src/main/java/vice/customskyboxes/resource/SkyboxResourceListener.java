@@ -1,14 +1,14 @@
 package vice.customskyboxes.resource;
 
 import com.google.common.base.Preconditions;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.google.gson.JsonObject;
+import com.google.gson.*;
 import com.mojang.serialization.JsonOps;
-import net.minecraft.profiler.IProfiler;
-import net.minecraft.resources.*;
-import net.minecraft.util.Unit;
-import net.minecraftforge.resource.IResourceType;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.packs.resources.PreparableReloadListener;
+import net.minecraft.server.packs.resources.Resource;
+import net.minecraft.server.packs.resources.ResourceManager;
+import net.minecraft.util.profiling.ProfilerFiller;
+import net.minecraftforge.registries.RegistryObject;
 import org.jetbrains.annotations.NotNull;
 import vice.customskyboxes.FabricSkyBoxesClient;
 import vice.customskyboxes.SkyboxManager;
@@ -16,26 +16,25 @@ import vice.customskyboxes.skyboxes.AbstractSkybox;
 import vice.customskyboxes.skyboxes.SkyboxType;
 import vice.customskyboxes.util.JsonObjectWrapper;
 import vice.customskyboxes.util.object.internal.Metadata;
-import net.minecraft.util.ResourceLocation;
 
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
-import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
-import java.util.concurrent.TimeUnit;
-import java.util.function.Predicate;
-import java.util.stream.Stream;
-import net.minecraftforge.resource.ISelectiveResourceReloadListener;
 
-public class SkyboxResourceListener implements ISelectiveResourceReloadListener
+public class SkyboxResourceListener implements PreparableReloadListener
 {
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().serializeNulls().setLenient().create();
     private static final JsonObjectWrapper objectWrapper = new JsonObjectWrapper();
 
+    private static SkyboxType<? extends AbstractSkybox> getSkyboxes() {
+        SkyboxType<? extends AbstractSkybox> skyType = null;
+        for (RegistryObject<SkyboxType<? extends AbstractSkybox>> skyboxType : SkyboxType.Builder.REGISTER.getEntries()) {
+            skyType = skyboxType.get();
+        }
+        return skyType;
+    }
 
     private static AbstractSkybox parseSkyboxJson(ResourceLocation id) {
         AbstractSkybox skybox;
@@ -52,7 +51,7 @@ public class SkyboxResourceListener implements ISelectiveResourceReloadListener
 
         FabricSkyBoxesClient.LOGGER.info("decoded metadata for " + id);
 
-        SkyboxType<? extends AbstractSkybox> type = SkyboxType.REGISTRY.getValue(metadata.getType());
+        SkyboxType<? extends AbstractSkybox> type = getSkyboxes();
 
         Preconditions.checkNotNull(type, "Unknown skybox type: " + metadata.getType().getPath().replace('_', '-'));
         if (metadata.getSchemaVersion() == 1)
@@ -77,43 +76,37 @@ public class SkyboxResourceListener implements ISelectiveResourceReloadListener
     }
 
     @Override
-    public void onResourceManagerReload(IResourceManager manager, Predicate<IResourceType> resourcePredicate)
-    {
-        FabricSkyBoxesClient.LOGGER.info("onResourceManagerReload");
+    public @NotNull CompletableFuture<Void> reload(@NotNull PreparationBarrier pPreparationBarrier, @NotNull ResourceManager manager, ProfilerFiller pPreparationsProfiler, ProfilerFiller pReloadProfiler, Executor backgroundExecutor, Executor gameExecutor) {
+        return new CompletableFuture<>().thenRun(() -> {
+            SkyboxManager skyboxManager = SkyboxManager.getInstance();
 
-        SkyboxManager skyboxManager = SkyboxManager.getInstance();
+            // clear registered skyboxes on reload
+            skyboxManager.clearSkyboxes();
 
-        // clear registered skyboxes on reload
-        skyboxManager.clearSkyboxes();
+            // load new skyboxes
+            Collection<ResourceLocation> resources = manager.listResources("sky", (string) -> string.getNamespace().endsWith(".json")).keySet();
 
-        // load new skyboxes
-        Collection<ResourceLocation> resources = manager.listResources("sky", (string) -> string.endsWith(".json"));
+            for (ResourceLocation id : resources) {
 
-        for (ResourceLocation id : resources) {
-
-            IResource resource;
-            try {
-                resource = manager.getResource(id);
+                Resource resource;
                 try {
-                    JsonObject json = GSON.fromJson(new InputStreamReader(resource.getInputStream()), JsonObject.class);
-                    objectWrapper.setFocusedObject(json);
-                    AbstractSkybox skybox = SkyboxResourceListener.parseSkyboxJson(id);
-                    if (skybox != null) {
-                        skyboxManager.addSkybox(skybox);
-                    }
-                } finally {
+                    resource = manager.getResource(id).get();
                     try {
-                        resource.close();
+                        JsonObject json = GSON.fromJson(new InputStreamReader(resource.open()), JsonObject.class);
+                        objectWrapper.setFocusedObject(json);
+                        AbstractSkybox skybox = SkyboxResourceListener.parseSkyboxJson(id);
+                        if (skybox != null) {
+                            skyboxManager.addSkybox(skybox);
+                        }
+
                     } catch (IOException e) {
-                        FabricSkyBoxesClient.getLogger().error("Error closing resource " + id.toString());
+                        FabricSkyBoxesClient.getLogger().error("Error reading skybox " + id.toString());
                         e.printStackTrace();
                     }
+                } catch (JsonSyntaxException | JsonIOException e) {
+                    throw new RuntimeException(e);
                 }
-            } catch (IOException e) {
-                FabricSkyBoxesClient.getLogger().error("Error reading skybox " + id.toString());
-                e.printStackTrace();
             }
-        }
-
+        });
     }
 }

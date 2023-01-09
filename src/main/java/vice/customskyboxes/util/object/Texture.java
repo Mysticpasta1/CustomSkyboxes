@@ -1,7 +1,7 @@
 package vice.customskyboxes.util.object;
 
 import com.mojang.serialization.Codec;
-import net.minecraft.util.ResourceLocation;
+import net.minecraft.resources.ResourceLocation;
 
 /**
  * Encapsulates the location of a texture, the

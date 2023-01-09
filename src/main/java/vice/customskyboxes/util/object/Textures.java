@@ -1,10 +1,10 @@
 package vice.customskyboxes.util.object;
 
 import java.util.List;
-import net.minecraft.util.ResourceLocation;
 import com.google.common.collect.Lists;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
+import net.minecraft.resources.ResourceLocation;
 
 public class Textures {
     public static final Codec<Textures> CODEC = RecordCodecBuilder.create(instance -> instance.group(

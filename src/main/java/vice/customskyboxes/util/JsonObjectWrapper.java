@@ -2,10 +2,10 @@ package vice.customskyboxes.util;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import net.minecraft.util.JSONUtils;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.GsonHelper;
 import vice.customskyboxes.FabricSkyBoxesClient;
 import java.util.Optional;
-import net.minecraft.util.ResourceLocation;
 
 public class JsonObjectWrapper {
     private JsonObject focusedObject;
@@ -36,7 +36,7 @@ public class JsonObjectWrapper {
             return defaultValue;
         }
         JsonElement element = this.getOptionalValue(key).get();
-        return JSONUtils.isNumberValue(element) ? element.getAsFloat() : defaultValue;
+        return GsonHelper.isNumberValue(element) ? element.getAsFloat() : defaultValue;
     }
 
     public boolean getOptionalBoolean(String key, boolean defaultValue) {

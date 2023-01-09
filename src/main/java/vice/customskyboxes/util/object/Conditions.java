@@ -3,7 +3,8 @@ package vice.customskyboxes.util.object;
 import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
-import net.minecraft.util.ResourceLocation;
+
+import net.minecraft.resources.ResourceLocation;
 import vice.customskyboxes.skyboxes.AbstractSkybox;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;

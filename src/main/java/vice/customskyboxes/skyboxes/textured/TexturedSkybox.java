@@ -1,12 +1,12 @@
 package vice.customskyboxes.skyboxes.textured;
 
-import com.mojang.blaze3d.matrix.MatrixStack;
 import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.vertex.BufferBuilder;
+import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.blaze3d.vertex.Tesselator;
+import com.mojang.math.Vector3f;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.BufferBuilder;
-import net.minecraft.client.renderer.Tessellator;
-import net.minecraft.client.world.ClientWorld;
-import net.minecraft.util.math.vector.Vector3f;
+import net.minecraft.client.multiplayer.ClientLevel;
 import vice.customskyboxes.mixin.skybox.WorldRendererAccess;
 import vice.customskyboxes.skyboxes.AbstractSkybox;
 import vice.customskyboxes.skyboxes.RotatableSkybox;
@@ -34,8 +34,7 @@ public abstract class TexturedSkybox extends AbstractSkybox implements Rotatable
      * @param tickDelta           The current tick delta.
      */
     @Override
-    public final void render(WorldRendererAccess worldRendererAccess, MatrixStack matrices, float tickDelta) {
-        RenderSystem.disableAlphaTest();
+    public final void render(WorldRendererAccess worldRendererAccess, PoseStack matrices, float tickDelta) {
         RenderSystem.depthMask(false);
         RenderSystem.enableBlend();
 
@@ -43,7 +42,7 @@ public abstract class TexturedSkybox extends AbstractSkybox implements Rotatable
 
         Vector3f rotationStatic = this.rotation.getStatic();
 
-        ClientWorld world = Minecraft.getInstance().level;
+        ClientLevel world = Minecraft.getInstance().level;
         assert world != null;
         float timeRotation = !this.shouldRotate ? 0 : ((float) world.getDayTime() / 24000) * 360;
 
@@ -58,22 +57,21 @@ public abstract class TexturedSkybox extends AbstractSkybox implements Rotatable
         matrices.mulPose(Vector3f.XP.rotationDegrees(rotationStatic.x()));
         matrices.popPose();
 
-        BufferBuilder bufferBuilder = Tessellator.getInstance().getBuilder();
+        BufferBuilder bufferBuilder = Tesselator.getInstance().getBuilder();
 
         this.renderDecorations(worldRendererAccess, matrices, tickDelta, bufferBuilder, this.alpha);
 
         RenderSystem.depthMask(true);
         RenderSystem.enableTexture();
         RenderSystem.disableBlend();
-        RenderSystem.enableAlphaTest();
     }
 
     /**
      * Override this method instead of render if you are extending this skybox.
      */
-    public abstract void renderSkybox(WorldRendererAccess worldRendererAccess, MatrixStack matrices, float tickDelta);
+    public abstract void renderSkybox(WorldRendererAccess worldRendererAccess, PoseStack matrices, float tickDelta);
 
-    private void applyTimeRotation(MatrixStack matrices, float timeRotation) {
+    private void applyTimeRotation(PoseStack matrices, float timeRotation) {
         // Very ugly, find a better way to do this
         Vector3f timeRotationAxis = this.rotation.getAxis();
         matrices.mulPose(Vector3f.XP.rotationDegrees(timeRotationAxis.x()));

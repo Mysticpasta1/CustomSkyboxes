@@ -8,9 +8,9 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.BiMap;
 import com.google.common.collect.ImmutableBiMap;
 import com.mojang.serialization.Codec;
-import com.mojang.serialization.Lifecycle;
 import lombok.val;
-import net.minecraft.util.registry.Registry;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.registries.*;
 import vice.customskyboxes.FabricSkyBoxesClient;
 import vice.customskyboxes.skyboxes.textured.AnimatedSquareTexturedSkybox;
@@ -19,12 +19,9 @@ import vice.customskyboxes.skyboxes.textured.SingleSpriteSquareTexturedSkybox;
 import vice.customskyboxes.skyboxes.textured.SquareTexturedSkybox;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import net.minecraft.util.ResourceLocation;
 
-public class SkyboxType<T extends AbstractSkybox> extends ForgeRegistryEntry<SkyboxType<? extends AbstractSkybox>>
+public class SkyboxType<T extends AbstractSkybox>
 {
-    public static final IForgeRegistry<SkyboxType<? extends AbstractSkybox>> REGISTRY;
-
     public static final SkyboxType<MonoColorSkybox> MONO_COLOR_SKYBOX;
     public static final SkyboxType<SquareTexturedSkybox> SQUARE_TEXTURED_SKYBOX;
     public static final SkyboxType<SingleSpriteSquareTexturedSkybox> SINGLE_SPRITE_SQUARE_TEXTURED_SKYBOX;
@@ -81,13 +78,6 @@ public class SkyboxType<T extends AbstractSkybox> extends ForgeRegistryEntry<Sky
     private static <T> Class<T> c(Class<?> cls) { return (Class<T>)cls; }
 
     static {
-
-
-        REGISTRY = new RegistryBuilder<SkyboxType<? extends AbstractSkybox>>()
-                .setName(new ResourceLocation(FabricSkyBoxesClient.MODID, "skybox_type"))
-                .setType(c(SkyboxType.class))
-                .create();
-
         MONO_COLOR_SKYBOX = Builder.create(MonoColorSkybox.class, "monocolor")
                 .legacySupported()
                 .deserializer(LegacyDeserializer.MONO_COLOR_SKYBOX_DESERIALIZER)
@@ -179,11 +169,12 @@ public class SkyboxType<T extends AbstractSkybox> extends ForgeRegistryEntry<Sky
             return new SkyboxType<>(this.builder.build(), this.legacySupported, this.name, this.factory, this.deserializer);
         }
 
+        public static DeferredRegister<SkyboxType<? extends AbstractSkybox>> REGISTER = DeferredRegister.create(ResourceKey.createRegistryKey(new ResourceLocation(FabricSkyBoxesClient.MODID, "skybox_type")), FabricSkyBoxesClient.MODID);
+
         public SkyboxType<T> buildAndRegister(String namespace)
         {
             val type = build();
-            type.setRegistryName(new ResourceLocation(namespace, this.name.replace('-', '_')));
-            SkyboxType.REGISTRY.register(type);
+            REGISTER.register(namespace, () -> type);
             return type;
         }
     }

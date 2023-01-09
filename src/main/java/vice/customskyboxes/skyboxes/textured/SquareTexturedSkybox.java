@@ -1,13 +1,11 @@
 package vice.customskyboxes.skyboxes.textured;
 
-import com.mojang.blaze3d.matrix.MatrixStack;
+import com.mojang.blaze3d.vertex.*;
+import com.mojang.math.Matrix4f;
+import com.mojang.math.Vector3f;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
-import net.minecraft.client.renderer.BufferBuilder;
-import net.minecraft.client.renderer.Tessellator;
-import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
-import net.minecraft.util.math.vector.Matrix4f;
-import net.minecraft.util.math.vector.Vector3f;
+import net.minecraft.client.Minecraft;
 import vice.customskyboxes.mixin.skybox.WorldRendererAccess;
 import vice.customskyboxes.skyboxes.AbstractSkybox;
 import vice.customskyboxes.skyboxes.SkyboxType;
@@ -40,10 +38,10 @@ public class SquareTexturedSkybox extends TexturedSkybox
     }
 
     @Override
-    public void renderSkybox(WorldRendererAccess worldRendererAccess, MatrixStack matrices, float tickDelta) {
-        Tessellator tessellator = Tessellator.getInstance();
+    public void renderSkybox(WorldRendererAccess worldRendererAccess, PoseStack matrices, float tickDelta) {
+        Tesselator tessellator = Tesselator.getInstance();
         BufferBuilder bufferBuilder = tessellator.getBuilder();
-        TextureManager textureManager = worldRendererAccess.getTextureManager();
+        TextureManager textureManager = Minecraft.getInstance().getTextureManager();
 
         for (int i = 0; i < 6; ++i) {
             // 0 = bottom
@@ -55,7 +53,7 @@ public class SquareTexturedSkybox extends TexturedSkybox
             Texture tex = this.textures.byId(i);
             matrices.pushPose();
 
-            textureManager.bind(tex.getTextureId());
+            textureManager.bindForSetup(tex.getTextureId());
 
             if (i == 1) {
                 matrices.mulPose(Vector3f.XP.rotationDegrees(90.0F));
@@ -74,7 +72,7 @@ public class SquareTexturedSkybox extends TexturedSkybox
             }
 
             Matrix4f matrix4f = matrices.last().pose();
-            bufferBuilder.begin(7, DefaultVertexFormats.POSITION_TEX_COLOR);
+            bufferBuilder.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX_COLOR);
             bufferBuilder.vertex(matrix4f, -100.0F, -100.0F, -100.0F).uv(tex.getMinU(), tex.getMinV()).color(1f, 1f, 1f, alpha).endVertex();
             bufferBuilder.vertex(matrix4f, -100.0F, -100.0F, 100.0F).uv(tex.getMinU(), tex.getMaxV()).color(1f, 1f, 1f, alpha).endVertex();
             bufferBuilder.vertex(matrix4f, 100.0F, -100.0F, 100.0F).uv(tex.getMaxU(), tex.getMaxV()).color(1f, 1f, 1f, alpha).endVertex();

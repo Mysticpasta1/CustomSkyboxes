@@ -2,30 +2,21 @@ package vice.customskyboxes.skyboxes;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
-import com.mojang.serialization.Lifecycle;
-import net.minecraft.util.JSONUtils;
-import net.minecraft.util.math.vector.Vector3f;
-import net.minecraft.util.registry.Registry;
-import net.minecraftforge.registries.ForgeRegistryEntry;
-import net.minecraftforge.registries.IForgeRegistry;
-import net.minecraftforge.registries.IForgeRegistryEntry;
-import net.minecraftforge.registries.RegistryBuilder;
+import com.mojang.math.Vector3f;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.GsonHelper;
+import net.minecraftforge.registries.DeferredRegister;
 import vice.customskyboxes.FabricSkyBoxesClient;
 import vice.customskyboxes.skyboxes.textured.SquareTexturedSkybox;
 import vice.customskyboxes.util.JsonObjectWrapper;
 import vice.customskyboxes.util.object.*;
-import net.minecraft.util.ResourceLocation;
+
 import java.util.List;
 import java.util.function.BiConsumer;
 
-public class LegacyDeserializer<T extends AbstractSkybox> extends ForgeRegistryEntry<LegacyDeserializer<? extends AbstractSkybox>>
+public class LegacyDeserializer<T extends AbstractSkybox>
 {
-    public static final IForgeRegistry<LegacyDeserializer<? extends AbstractSkybox>> REGISTRY =
-            new RegistryBuilder<LegacyDeserializer<? extends AbstractSkybox>>()
-                    .setName(new ResourceLocation(FabricSkyBoxesClient.MODID, "legacy_skybox_deserializer"))
-                    .setType(c(LegacyDeserializer.class))
-                    .create();
-
     public static final LegacyDeserializer<MonoColorSkybox> MONO_COLOR_SKYBOX_DESERIALIZER = register(new LegacyDeserializer<>(LegacyDeserializer::decodeMonoColor, MonoColorSkybox.class), "mono_color_skybox_legacy_deserializer");
     public static final LegacyDeserializer<SquareTexturedSkybox> SQUARE_TEXTURED_SKYBOX_DESERIALIZER = register(new LegacyDeserializer<>(LegacyDeserializer::decodeSquareTextured, SquareTexturedSkybox.class), "square_textured_skybox_legacy_deserializer");
     private final BiConsumer<JsonObjectWrapper, AbstractSkybox> deserializer;
@@ -87,7 +78,7 @@ public class LegacyDeserializer<T extends AbstractSkybox> extends ForgeRegistryE
                 for (JsonElement jsonElement : element.getAsJsonArray()) {
                     skybox.weather.add(jsonElement.getAsString());
                 }
-            } else if (JSONUtils.isStringValue(element)) {
+            } else if (GsonHelper.isStringValue(element)) {
                 skybox.weather.add(element.getAsString());
             }
         }
@@ -113,17 +104,18 @@ public class LegacyDeserializer<T extends AbstractSkybox> extends ForgeRegistryE
                 for (JsonElement jsonElement : element.getAsJsonArray()) {
                     list.add(new ResourceLocation(jsonElement.getAsString()));
                 }
-            } else if (JSONUtils.isStringValue(element)) {
+            } else if (GsonHelper.isStringValue(element)) {
                 list.add(new ResourceLocation(element.getAsString()));
             }
         }
     }
 
-    private static <T> Class<T> c(Class<?> cls) { return (Class<T>)cls; }
+    public static DeferredRegister<LegacyDeserializer<? extends AbstractSkybox>> REGISTER = DeferredRegister.create(ResourceKey.createRegistryKey(new ResourceLocation(FabricSkyBoxesClient.MODID, "legacy_skybox_deserializer")), FabricSkyBoxesClient.MODID);
 
     private static <T extends AbstractSkybox> LegacyDeserializer<T> register(LegacyDeserializer<T> deserializer, String name) {
-        deserializer.setRegistryName(new ResourceLocation(FabricSkyBoxesClient.MODID, name));
-        LegacyDeserializer.REGISTRY.register(deserializer);
+        if(REGISTER != null) {
+            REGISTER.register(name, () -> deserializer);
+        }
         return deserializer;
     }
 }

@@ -2,7 +2,7 @@ package vice.customskyboxes.util;
 
 import java.util.function.Function;
 import com.mojang.serialization.Codec;
-import net.minecraft.util.math.MathHelper;
+import net.minecraft.util.Mth;
 
 public class Utils {
     /**
@@ -21,6 +21,6 @@ public class Utils {
         if (min > max) {
             throw new UnsupportedOperationException("Maximum value was lesser than than the minimum value");
         }
-        return Codec.FLOAT.xmap(f -> MathHelper.clamp(f, min, max), Function.identity());
+        return Codec.FLOAT.xmap(f -> Mth.clamp(f, min, max), Function.identity());
     }
 }

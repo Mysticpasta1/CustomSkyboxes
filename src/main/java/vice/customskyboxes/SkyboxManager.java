@@ -2,7 +2,7 @@ package vice.customskyboxes;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Iterables;
-import com.mojang.blaze3d.matrix.MatrixStack;
+import com.mojang.blaze3d.vertex.PoseStack;
 import vice.customskyboxes.mixin.skybox.WorldRendererAccess;
 import vice.customskyboxes.skyboxes.AbstractSkybox;
 
@@ -60,7 +60,7 @@ public class SkyboxManager {
         return (float) StreamSupport.stream(Iterables.concat(this.skyboxes, this.permanentSkyboxes).spliterator(), false).mapToDouble(AbstractSkybox::getAlpha).sum();
     }
 
-    public void renderSkyboxes(WorldRendererAccess worldRendererAccess, MatrixStack matrices, float tickDelta) {
+    public void renderSkyboxes(WorldRendererAccess worldRendererAccess, PoseStack matrices, float tickDelta) {
         // Add the skyboxes to a activeSkyboxes container so that they can be ordered
         this.skyboxes.stream().filter(this.renderPredicate).forEach(this.activeSkyboxes::add);
         this.permanentSkyboxes.stream().filter(this.renderPredicate).forEach(this.activeSkyboxes::add);

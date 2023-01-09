@@ -1,7 +1,7 @@
 {
   "required": true,
   "package": "vice.customskyboxes.mixin",
-  "compatibilityLevel": "JAVA_8",
+  "compatibilityLevel": "JAVA_17",
   "refmap": "customskyboxes.refmap.json",
   "mixins": [
   ],

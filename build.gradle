@@ -35,7 +35,7 @@ version = "mc${minecraft_version}_v${mod_version}" + (dev && !buildnumber.equals
 group = 'vice.' + String.valueOf(mod_id)
 archivesBaseName = String.valueOf(mod_id)
 
-java.toolchain.languageVersion = JavaLanguageVersion.of(8)
+java.toolchain.languageVersion = JavaLanguageVersion.of(17)
 
 minecraft {
     mappings channel: "${mappings_channel}", version: "${mappings_version}"
@@ -109,30 +109,15 @@ repositories {
 dependencies {
     implementation 'org.jetbrains:annotations:20.1.0'
 
-    compileOnly 'org.projectlombok:lombok:1.18.22'
-    annotationProcessor 'org.projectlombok:lombok:1.18.22'
+    compileOnly 'org.projectlombok:lombok:1.18.24'
+    annotationProcessor 'org.projectlombok:lombok:1.18.24'
 
-    testCompileOnly 'org.projectlombok:lombok:1.18.22'
-    testAnnotationProcessor 'org.projectlombok:lombok:1.18.22'
+    testCompileOnly 'org.projectlombok:lombok:1.18.24'
+    testAnnotationProcessor 'org.projectlombok:lombok:1.18.24'
 
     minecraft "net.minecraftforge:forge:${minecraft_version}-${forge_version}"
 
-    runtimeOnly fg.deobf("curse.maven:magnesium-532724:3503910")
-    runtimeOnly fg.deobf("curse.maven:jei-238222:3438494")
-    runtimeOnly fg.deobf("curse.maven:jer-240630:3066754")
-    runtimeOnly fg.deobf("curse.maven:jade-324717:3467445")
-    runtimeOnly fg.deobf("curse.maven:spark-361579:3337641")
-    runtimeOnly fg.deobf("curse.maven:lazydfu-433518:3209972")
-    runtimeOnly fg.deobf("curse.maven:smoothboot-420913:3224252")
-    runtimeOnly fg.deobf("curse.maven:alltheores-405593:3405905")
-    runtimeOnly fg.deobf("curse.maven:cofh-69162:3407019")
-    runtimeOnly fg.deobf("curse.maven:thermalfoundation-222880:3412300")
-    runtimeOnly fg.deobf("curse.maven:thermalexpansion-69163:3404884")
-    runtimeOnly fg.deobf("curse.maven:engineers-313866:3390489")
-    runtimeOnly fg.deobf("curse.maven:immersive-231951:3497359")
-    runtimeOnly fg.deobf("curse.maven:patchouli-306770:3459118")
-
-    annotationProcessor 'org.spongepowered:mixin:0.8.3:processor'
+    annotationProcessor 'org.spongepowered:mixin:0.8.5:processor'
 }
 
 jar {

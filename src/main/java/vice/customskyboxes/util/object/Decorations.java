@@ -2,7 +2,7 @@ package vice.customskyboxes.util.object;
 
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
-import net.minecraft.util.ResourceLocation;
+import net.minecraft.resources.ResourceLocation;
 
 /**
  * The moon texture must be a 4 wide, 2 high, stacked texture.

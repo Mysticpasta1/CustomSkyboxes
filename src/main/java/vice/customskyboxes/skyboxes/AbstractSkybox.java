@@ -2,34 +2,30 @@ package vice.customskyboxes.skyboxes;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Ordering;
-import com.mojang.blaze3d.matrix.MatrixStack;
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
-import net.minecraft.client.entity.player.ClientPlayerEntity;
-import net.minecraft.client.renderer.BufferBuilder;
-import net.minecraft.client.renderer.IRenderTypeBuffer;
-import net.minecraft.client.renderer.WorldVertexBufferUploader;
-import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
-import net.minecraft.client.renderer.vertex.VertexBuffer;
-import net.minecraft.client.world.ClientWorld;
-import net.minecraft.potion.Effect;
-import net.minecraft.potion.EffectInstance;
-import net.minecraft.potion.Effects;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.math.vector.Matrix4f;
-import net.minecraft.util.math.vector.Vector3f;
-import net.minecraft.util.registry.Registry;
-import net.minecraft.world.biome.Biome;
+import com.mojang.blaze3d.vertex.*;
+import com.mojang.math.Matrix4f;
+import com.mojang.math.Vector3f;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.multiplayer.ClientLevel;
+import net.minecraft.core.Registry;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.effect.MobEffect;
+import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.effect.MobEffects;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.level.biome.Biome;
 import vice.customskyboxes.SkyboxManager;
 import vice.customskyboxes.mixin.skybox.WorldRendererAccess;
 import vice.customskyboxes.util.Utils;
 import vice.customskyboxes.util.object.*;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
-import net.minecraft.client.Minecraft;
 
 /**
  * All classes that implement {@link AbstractSkybox} should
@@ -65,10 +61,10 @@ public abstract class AbstractSkybox {
      * Override this if you are creating a skybox from this one.
      *
      * @param worldRendererAccess Access to the worldRenderer as skyboxes often require it.
-     * @param matrices            The current MatrixStack.
+     * @param matrices            The current PoseStack.
      * @param tickDelta           The current tick delta.
      */
-    public abstract void render(WorldRendererAccess worldRendererAccess, MatrixStack matrices, float tickDelta);
+    public abstract void render(WorldRendererAccess worldRendererAccess, PoseStack matrices, float tickDelta);
 
     protected AbstractSkybox() {
     }
@@ -198,7 +194,7 @@ public abstract class AbstractSkybox {
         if (worlds.isEmpty()|| worlds.contains(client.level.dimension().location())) {
             if (biomes.isEmpty()) return true;
             assert client.player != null;
-            return biomes.contains(client.level.registryAccess().registryOrThrow(Registry.BIOME_REGISTRY).getKey(client.level.getBiome(client.player.blockPosition())));
+            return biomes.contains(client.level.registryAccess().registryOrThrow(Registry.BIOME_REGISTRY).getKey(client.level.getBiome(client.player.blockPosition()).value()));
         }
         return false;
     }
@@ -207,12 +203,12 @@ public abstract class AbstractSkybox {
 		Check if player has an effect that should prevent skybox from showing
      */
     protected boolean checkEffect() {
-    	ClientPlayerEntity player = Minecraft.getInstance().player;
-    	Collection<EffectInstance> activeEffects = player.getActiveEffects();
+    	Player player = Minecraft.getInstance().player;
+    	Collection<MobEffectInstance> activeEffects = player.getActiveEffects();
     	if (!activeEffects.isEmpty()) {
-    		for (EffectInstance statusEffectInstance : Ordering.natural().reverse().sortedCopy(activeEffects)) {
-                Effect statusEffect = statusEffectInstance.getEffect();
-    			if (statusEffect.equals(Effects.BLINDNESS)) {
+    		for (MobEffectInstance statusEffectInstance : Ordering.natural().reverse().sortedCopy(activeEffects)) {
+                MobEffect statusEffect = statusEffectInstance.getEffect();
+    			if (statusEffect.equals(MobEffects.BLINDNESS)) {
     				return false;
     			}
     		}
@@ -237,13 +233,13 @@ public abstract class AbstractSkybox {
      * @return Whether the current weather is valid for this skybox.
      */
     protected boolean checkWeather() {
-        ClientWorld world = Objects.requireNonNull(Minecraft.getInstance().level);
-        ClientPlayerEntity player = Objects.requireNonNull(Minecraft.getInstance().player);
-        Biome.RainType precipitation = world.getBiome(player.blockPosition()).getPrecipitation();
+        ClientLevel world = Objects.requireNonNull(Minecraft.getInstance().level);
+        Player player = Objects.requireNonNull(Minecraft.getInstance().player);
+        Biome.Precipitation precipitation = world.getBiome(player.blockPosition()).value().getPrecipitation();
         if (weather.size() > 0) {
             if (weather.contains("thunder") && world.isThundering()) {
                 return true;
-            } else if (weather.contains("snow") && world.isRaining() && precipitation == Biome.RainType.SNOW) {
+            } else if (weather.contains("snow") && world.isRaining() && precipitation == Biome.Precipitation.SNOW) {
                 return true;
             } else if (weather.contains("rain") && world.isRaining() && !world.isThundering()) {
                 return true;
@@ -255,7 +251,7 @@ public abstract class AbstractSkybox {
 
     public abstract SkyboxType<? extends AbstractSkybox> getType();
 
-    public void renderDecorations(WorldRendererAccess worldRendererAccess, MatrixStack matrices, float tickDelta, BufferBuilder bufferBuilder, float alpha) {
+    public void renderDecorations(WorldRendererAccess worldRendererAccess, PoseStack matrices, float tickDelta, BufferBuilder bufferBuilder, float alpha) {
         if (!SkyboxManager.getInstance().hasRenderedDecorations())
         {
             Vector3f rotationStatic = decorations.getRotation().getStatic();
@@ -266,7 +262,7 @@ public abstract class AbstractSkybox {
             matrices.mulPose(Vector3f.XP.rotationDegrees(rotationStatic.x()));
             matrices.mulPose(Vector3f.YP.rotationDegrees(rotationStatic.y()));
             matrices.mulPose(Vector3f.ZP.rotationDegrees(rotationStatic.z()));
-            ClientWorld world = Minecraft.getInstance().level;
+            ClientLevel world = Minecraft.getInstance().level;
             assert world != null;
             RenderSystem.enableTexture();
             RenderSystem.blendFuncSeparate(GlStateManager.SourceFactor.SRC_ALPHA, GlStateManager.DestFactor.ONE, GlStateManager.SourceFactor.ONE, GlStateManager.DestFactor.ZERO);
@@ -280,23 +276,22 @@ public abstract class AbstractSkybox {
             matrices.mulPose(Vector3f.XN.rotationDegrees(rotationAxis.x()));
             float r = 1.0F - world.getRainLevel(tickDelta);
             // sun
-            RenderSystem.color4f(1.0F, 1.0F, 1.0F, alpha);
+            RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, alpha);
             Matrix4f matrix4f2 = matrices.last().pose();
             float s = 30.0F;
             if (decorations.isSunEnabled()) {
-                worldRendererAccess.getTextureManager().bind(this.decorations.getSunTexture());
-                bufferBuilder.begin(7, DefaultVertexFormats.POSITION_TEX);
+                Minecraft.getInstance().getTextureManager().bindForSetup(this.decorations.getSunTexture());
+                bufferBuilder.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX);
                 bufferBuilder.vertex(matrix4f2, -s, 100.0F, -s).uv(0.0F, 0.0F).endVertex();
                 bufferBuilder.vertex(matrix4f2, s, 100.0F, -s).uv(1.0F, 0.0F).endVertex();
                 bufferBuilder.vertex(matrix4f2, s, 100.0F, s).uv(1.0F, 1.0F).endVertex();
                 bufferBuilder.vertex(matrix4f2, -s, 100.0F, s).uv(0.0F, 1.0F).endVertex();
-                bufferBuilder.end();
-                WorldVertexBufferUploader.end(bufferBuilder);
+                BufferUploader.draw(bufferBuilder.end());
             }
             // moon
             s = 20.0F;
             if (decorations.isMoonEnabled()) {
-                worldRendererAccess.getTextureManager().bind(this.decorations.getMoonTexture());
+                Minecraft.getInstance().getTextureManager().bindForSetup(this.decorations.getMoonTexture());
                 int t = world.getMoonPhase();
                 int u = t % 4;
                 int v = t / 4 % 2;
@@ -304,34 +299,30 @@ public abstract class AbstractSkybox {
                 float o = (float) (v) / 2.0F;
                 float p = (float) (u + 1) / 4.0F;
                 float q = (float) (v + 1) / 2.0F;
-                bufferBuilder.begin(7, DefaultVertexFormats.POSITION_TEX);
+                bufferBuilder.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX);
                 bufferBuilder.vertex(matrix4f2, -s, -100.0F, s).uv(p, q).endVertex();
                 bufferBuilder.vertex(matrix4f2, s, -100.0F, s).uv(w, q).endVertex();
                 bufferBuilder.vertex(matrix4f2, s, -100.0F, -s).uv(w, o).endVertex();
                 bufferBuilder.vertex(matrix4f2, -s, -100.0F, -s).uv(p, o).endVertex();
                 bufferBuilder.end();
-                WorldVertexBufferUploader.end(bufferBuilder);
+                BufferUploader.draw(bufferBuilder.end());
             }
             // stars
             if (decorations.isStarsEnabled()) {
                 RenderSystem.disableTexture();
                 float aa = world.getStarBrightness(tickDelta) * r;
                 if (aa > 0.0F) {
-                    RenderSystem.color4f(aa, aa, aa, aa);
+                    RenderSystem.setShaderColor(aa, aa, aa, aa);
                     worldRendererAccess.getStarBuffer().bind();
-                    worldRendererAccess.getSkyFormat().setupBufferState(0L);
-                    worldRendererAccess.getStarBuffer().draw(matrices.last().pose(), 7);
+                    worldRendererAccess.getStarBuffer().draw();
                     VertexBuffer.unbind();
-                    worldRendererAccess.getSkyFormat().clearBufferState();
                 }
             }
             matrices.mulPose(Vector3f.ZP.rotationDegrees(rotationStatic.z()));
             matrices.mulPose(Vector3f.YP.rotationDegrees(rotationStatic.y()));
             matrices.mulPose(Vector3f.XP.rotationDegrees(rotationStatic.x()));
-            RenderSystem.color4f(1.0F, 1.0F, 1.0F, 1.0F);
+            RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
             RenderSystem.disableBlend();
-            RenderSystem.enableAlphaTest();
-            RenderSystem.enableFog();
             matrices.popPose();
         }
     }

@@ -2,7 +2,7 @@ package vice.customskyboxes.skyboxes.textured;
 
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
-import net.minecraft.util.Util;
+import net.minecraft.Util;
 import vice.customskyboxes.skyboxes.AbstractSkybox;
 import vice.customskyboxes.skyboxes.SkyboxType;
 import vice.customskyboxes.util.object.*;

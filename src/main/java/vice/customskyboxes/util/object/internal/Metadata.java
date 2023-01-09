@@ -2,8 +2,8 @@ package vice.customskyboxes.util.object.internal;
 
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
+import net.minecraft.resources.ResourceLocation;
 import vice.customskyboxes.skyboxes.SkyboxType;
-import net.minecraft.util.ResourceLocation;
 
 public class Metadata {
     public static final Codec<Metadata> CODEC = RecordCodecBuilder.create(instance -> instance.group(

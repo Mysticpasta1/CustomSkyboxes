@@ -1,10 +1,10 @@
 package vice.customskyboxes.util.object;
 
 import com.google.common.collect.ImmutableList;
+import com.mojang.math.Vector3f;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.DataResult;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
-import net.minecraft.util.math.vector.Vector3f;
 
 public class Rotation {
     private static final Codec<Vector3f> VEC_3_F = Codec.FLOAT.listOf().comapFlatMap((list) -> {

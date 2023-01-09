@@ -1,6 +1,6 @@
 package vice.customskyboxes.skyboxes.textured;
 
-import com.mojang.blaze3d.matrix.MatrixStack;
+import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import vice.customskyboxes.mixin.skybox.WorldRendererAccess;
@@ -41,7 +41,7 @@ public class AnimatedSquareTexturedSkybox extends SquareTexturedSkybox {
     }
 
     @Override
-    public void renderSkybox(WorldRendererAccess worldRendererAccess, MatrixStack matrices, float tickDelta) {
+    public void renderSkybox(WorldRendererAccess worldRendererAccess, PoseStack matrices, float tickDelta) {
         if (this.lastTime == 0L) this.lastTime = System.currentTimeMillis();
         this.textures = this.getAnimationTextures().get(this.count);
 
