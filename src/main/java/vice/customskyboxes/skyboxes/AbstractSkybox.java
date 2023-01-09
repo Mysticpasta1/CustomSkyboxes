@@ -304,7 +304,6 @@ public abstract class AbstractSkybox {
                 bufferBuilder.vertex(matrix4f2, s, -100.0F, s).uv(w, q).endVertex();
                 bufferBuilder.vertex(matrix4f2, s, -100.0F, -s).uv(w, o).endVertex();
                 bufferBuilder.vertex(matrix4f2, -s, -100.0F, -s).uv(p, o).endVertex();
-                bufferBuilder.end();
                 BufferUploader.draw(bufferBuilder.end());
             }
             // stars

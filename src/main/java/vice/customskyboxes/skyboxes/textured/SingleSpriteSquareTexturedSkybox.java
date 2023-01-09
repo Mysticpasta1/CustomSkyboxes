@@ -31,7 +31,7 @@ public class SingleSpriteSquareTexturedSkybox extends SquareTexturedSkybox {
 
 	@Override
 	public SkyboxType<? extends AbstractSkybox> getType() {
-		return SkyboxType.SINGLE_SPRITE_SQUARE_TEXTURED_SKYBOX;
+		return SkyboxType.SINGLE_SPRITE_SQUARE_TEXTURED_SKYBOX.get();
 	}
 
 	public Texture getTexture() {

@@ -15,11 +15,10 @@ public class SingleSpriteAnimatedSquareTexturedSkybox extends AnimatedSquareText
 			Conditions.CODEC.optionalFieldOf("conditions", Conditions.NO_CONDITIONS).forGetter(AbstractSkybox::getConditions),
 			Decorations.CODEC.optionalFieldOf("decorations", Decorations.DEFAULT).forGetter(AbstractSkybox::getDecorations),
 			Blend.CODEC.optionalFieldOf("blend", Blend.DEFAULT).forGetter(TexturedSkybox::getBlend),
-			Texture.CODEC.listOf().fieldOf("animationTextures").forGetter(SingleSpriteAnimatedSquareTexturedSkybox::getAnimationTextureList),
-			Codec.FLOAT.fieldOf("fps").forGetter(SingleSpriteAnimatedSquareTexturedSkybox::getFps)
+			Texture.CODEC.listOf().fieldOf("animatedTexture").forGetter(SingleSpriteAnimatedSquareTexturedSkybox::getAnimationTextureList)
 	).apply(instance, SingleSpriteAnimatedSquareTexturedSkybox::new));
 
-	public SingleSpriteAnimatedSquareTexturedSkybox(DefaultProperties properties, Conditions conditions, Decorations decorations, Blend blend, List<Texture> animationTextures, float fps) {
+	public SingleSpriteAnimatedSquareTexturedSkybox(DefaultProperties properties, Conditions conditions, Decorations decorations, Blend blend, List<Texture> animationTextures) {
 		super(
 				properties,
 				conditions,
@@ -32,14 +31,13 @@ public class SingleSpriteAnimatedSquareTexturedSkybox extends AnimatedSquareText
 						texture.withUV(0, 1.0F / 2.0F, 1.0F / 3.0F, 1),
 						texture.withUV(1.0F / 3.0F, 0, 2.0F / 3.0F, 1.0F / 2.0F),
 						texture.withUV(0, 0, 1.0F / 3.0F, 1.0F / 2.0F)
-				)).collect(Collectors.toList()),
-				fps
+				)).collect(Collectors.toList())
 		);
 	}
 
 	@Override
 	public SkyboxType<? extends AbstractSkybox> getType() {
-		return SkyboxType.SINGLE_SPRITE_ANIMATED_SQUARE_TEXTURED_SKYBOX;
+		return SkyboxType.SINGLE_SPRITE_ANIMATED_SQUARE_TEXTURED_SKYBOX.get();
 	}
 
 	public List<Texture> getAnimationTextureList() {

@@ -37,7 +37,7 @@ public class MonoColorSkybox extends AbstractSkybox {
 
     @Override
     public SkyboxType<? extends AbstractSkybox> getType() {
-        return SkyboxType.MONO_COLOR_SKYBOX;
+        return SkyboxType.MONO_COLOR_SKYBOX.get();
     }
 
     @Override
@@ -82,7 +82,6 @@ public class MonoColorSkybox extends AbstractSkybox {
                     bufferBuilder.vertex(matrix4f, p * 120.0F, q * 120.0F, -q * 40.0F * skyColor[3]).color(skyColor[0], skyColor[1], skyColor[2], 0.0F).endVertex();
                 }
 
-                bufferBuilder.end();
                 BufferUploader.draw(bufferBuilder.end());
                 matrices.popPose();
             }

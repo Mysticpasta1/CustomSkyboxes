@@ -3,6 +3,8 @@ package vice.customskyboxes.skyboxes.textured;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
+import net.minecraft.client.Minecraft;
+import vice.customskyboxes.mixin.skybox.FpsAccess;
 import vice.customskyboxes.mixin.skybox.WorldRendererAccess;
 import vice.customskyboxes.skyboxes.AbstractSkybox;
 import vice.customskyboxes.skyboxes.SkyboxType;
@@ -15,24 +17,22 @@ public class AnimatedSquareTexturedSkybox extends SquareTexturedSkybox {
             Conditions.CODEC.optionalFieldOf("conditions", Conditions.NO_CONDITIONS).forGetter(AbstractSkybox::getConditions),
             Decorations.CODEC.optionalFieldOf("decorations", Decorations.DEFAULT).forGetter(AbstractSkybox::getDecorations),
             Blend.CODEC.optionalFieldOf("blend", Blend.DEFAULT).forGetter(TexturedSkybox::getBlend),
-            Textures.CODEC.listOf().fieldOf("animationTextures").forGetter(AnimatedSquareTexturedSkybox::getAnimationTextures),
-            Codec.FLOAT.fieldOf("fps").forGetter(AnimatedSquareTexturedSkybox::getFps)
+            Textures.CODEC.listOf().fieldOf("animatedTexture").forGetter(AnimatedSquareTexturedSkybox::getAnimationTextures)
     ).apply(instance, AnimatedSquareTexturedSkybox::new));
     private final List<Textures> animationTextures;
-    private final float fps;
     private final long frameTimeMillis;
     private int count = 0;
     private long lastTime = 0L;
 
     @Override
     public SkyboxType<? extends AbstractSkybox> getType() {
-        return SkyboxType.ANIMATED_SQUARE_TEXTURED_SKYBOX;
+        return SkyboxType.ANIMATED_SQUARE_TEXTURED_SKYBOX.get();
     }
 
-    public AnimatedSquareTexturedSkybox(DefaultProperties properties, Conditions conditions, Decorations decorations, Blend blend, List<Textures> animationTextures, float fps) {
+    public AnimatedSquareTexturedSkybox(DefaultProperties properties, Conditions conditions, Decorations decorations, Blend blend, List<Textures> animationTextures) {
         super(properties, conditions, decorations, blend, null);
         this.animationTextures = animationTextures;
-        this.fps = fps;
+        int fps = ((FpsAccess) Minecraft.getInstance()).getFps();
         if (fps > 0 && fps <= 360) {
             this.frameTimeMillis = (long) (1000F / fps);
         } else {
@@ -61,9 +61,5 @@ public class AnimatedSquareTexturedSkybox extends SquareTexturedSkybox {
 
     public List<Textures> getAnimationTextures() {
         return this.animationTextures;
-    }
-
-    public float getFps() {
-        return this.fps;
     }
 }

@@ -4,15 +4,12 @@ import com.google.common.base.Preconditions;
 import com.google.gson.*;
 import com.mojang.serialization.JsonOps;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.server.packs.resources.PreparableReloadListener;
-import net.minecraft.server.packs.resources.Resource;
-import net.minecraft.server.packs.resources.ResourceManager;
-import net.minecraft.util.profiling.ProfilerFiller;
+import net.minecraft.server.packs.resources.*;
 import net.minecraftforge.registries.RegistryObject;
-import org.jetbrains.annotations.NotNull;
 import vice.customskyboxes.FabricSkyBoxesClient;
 import vice.customskyboxes.SkyboxManager;
 import vice.customskyboxes.skyboxes.AbstractSkybox;
+import vice.customskyboxes.skyboxes.MonoColorSkybox;
 import vice.customskyboxes.skyboxes.SkyboxType;
 import vice.customskyboxes.util.JsonObjectWrapper;
 import vice.customskyboxes.util.object.internal.Metadata;
@@ -20,23 +17,13 @@ import vice.customskyboxes.util.object.internal.Metadata;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.Collection;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.Executor;
 
-public class SkyboxResourceListener implements PreparableReloadListener
+public class SkyboxResourceListener implements ResourceManagerReloadListener
 {
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().serializeNulls().setLenient().create();
     private static final JsonObjectWrapper objectWrapper = new JsonObjectWrapper();
 
-    private static SkyboxType<? extends AbstractSkybox> getSkyboxes() {
-        SkyboxType<? extends AbstractSkybox> skyType = null;
-        for (RegistryObject<SkyboxType<? extends AbstractSkybox>> skyboxType : SkyboxType.Builder.REGISTER.getEntries()) {
-            skyType = skyboxType.get();
-        }
-        return skyType;
-    }
-
-    private static AbstractSkybox parseSkyboxJson(ResourceLocation id) {
+    private static AbstractSkybox parseSkyboxJson(Resource id) {
         AbstractSkybox skybox;
         Metadata metadata;
         FabricSkyBoxesClient.LOGGER.info("parseSkyboxJson for " + id);
@@ -51,19 +38,18 @@ public class SkyboxResourceListener implements PreparableReloadListener
 
         FabricSkyBoxesClient.LOGGER.info("decoded metadata for " + id);
 
-        SkyboxType<? extends AbstractSkybox> type = getSkyboxes();
+        System.out.println(SkyboxType.SkyboxTypes.get(new ResourceLocation(FabricSkyBoxesClient.MODID, "single_sprite_square_texture")));
+
+        SkyboxType<? extends AbstractSkybox> type = SkyboxType.SkyboxTypes.get(metadata.getType()).get();
 
         Preconditions.checkNotNull(type, "Unknown skybox type: " + metadata.getType().getPath().replace('_', '-'));
-        if (metadata.getSchemaVersion() == 1)
-        {
+        if (metadata.getSchemaVersion() == 1) {
             Preconditions.checkArgument(type.isLegacySupported(), "Unsupported schema version '1' for skybox type " + type.getName());
             FabricSkyBoxesClient.getLogger().debug("Using legacy deserializer for skybox " + id.toString());
             skybox = type.instantiate();
             //noinspection ConstantConditions
             type.getDeserializer().getDeserializer().accept(objectWrapper, skybox);
-        }
-        else
-        {
+        } else {
             FabricSkyBoxesClient.LOGGER.info("getSchemaVersion for " + id);
 
             skybox = type.getCodec(metadata.getSchemaVersion())
@@ -76,37 +62,35 @@ public class SkyboxResourceListener implements PreparableReloadListener
     }
 
     @Override
-    public @NotNull CompletableFuture<Void> reload(@NotNull PreparationBarrier pPreparationBarrier, @NotNull ResourceManager manager, ProfilerFiller pPreparationsProfiler, ProfilerFiller pReloadProfiler, Executor backgroundExecutor, Executor gameExecutor) {
-        return new CompletableFuture<>().thenRun(() -> {
-            SkyboxManager skyboxManager = SkyboxManager.getInstance();
+    public void onResourceManagerReload(ResourceManager manager) {
+        SkyboxManager skyboxManager = SkyboxManager.getInstance();
 
-            // clear registered skyboxes on reload
-            skyboxManager.clearSkyboxes();
+        // clear registered skyboxes on reload
+        skyboxManager.clearSkyboxes();
 
-            // load new skyboxes
-            Collection<ResourceLocation> resources = manager.listResources("sky", (string) -> string.getNamespace().endsWith(".json")).keySet();
+        // load new skyboxes
+        Collection<Resource> resources = manager.listResources("sky", (string) -> !string.getNamespace().endsWith("json")).values();
 
-            for (ResourceLocation id : resources) {
+        for (Resource id : resources) {
 
-                Resource resource;
+            Resource resource;
+
+            try {
+                resource = id;
                 try {
-                    resource = manager.getResource(id).get();
-                    try {
-                        JsonObject json = GSON.fromJson(new InputStreamReader(resource.open()), JsonObject.class);
-                        objectWrapper.setFocusedObject(json);
-                        AbstractSkybox skybox = SkyboxResourceListener.parseSkyboxJson(id);
-                        if (skybox != null) {
-                            skyboxManager.addSkybox(skybox);
-                        }
-
-                    } catch (IOException e) {
-                        FabricSkyBoxesClient.getLogger().error("Error reading skybox " + id.toString());
-                        e.printStackTrace();
+                    JsonObject json = GSON.fromJson(new InputStreamReader(resource.open()), JsonObject.class);
+                    objectWrapper.setFocusedObject(json);
+                    AbstractSkybox skybox = SkyboxResourceListener.parseSkyboxJson(id);
+                    if (skybox != null) {
+                        skyboxManager.addSkybox(skybox);
                     }
-                } catch (JsonSyntaxException | JsonIOException e) {
-                    throw new RuntimeException(e);
+                } catch (IOException e) {
+                    FabricSkyBoxesClient.getLogger().error("Error reading skybox " + id);
+                    e.printStackTrace();
                 }
+            } catch (JsonSyntaxException | JsonIOException e) {
+                throw new RuntimeException(e);
             }
-        });
+        }
     }
 }
