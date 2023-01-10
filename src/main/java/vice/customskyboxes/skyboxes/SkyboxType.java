@@ -71,14 +71,13 @@ public class SkyboxType<T extends AbstractSkybox> {
 
     public static DeferredRegister<SkyboxType<? extends AbstractSkybox>> REGISTER = DeferredRegister.create(new ResourceLocation(FabricSkyBoxesClient.MODID, "skybox_type"), FabricSkyBoxesClient.MODID);
 
-    public static Map<ResourceLocation, RegistryObject<SkyboxType<? extends AbstractSkybox>>> SkyboxTypes = new HashMap<>();
+    public static Supplier<IForgeRegistry<SkyboxType<? extends AbstractSkybox>>> SkyboxTypes = REGISTER.makeRegistry(() ->
+            new RegistryBuilder<SkyboxType<? extends AbstractSkybox>>().setMaxID(Integer.MAX_VALUE - 1).onAdd((owner, stage, id, key, obj, old) ->
+            FabricSkyBoxesClient.LOGGER.info("SkyboxType Added: " + key.location() + " ")
+            ).setDefaultKey(new ResourceLocation(FabricSkyBoxesClient.MODID, "null"))
+    );
 
     public static void init(IEventBus bus) {
-        REGISTER.makeRegistry(() ->
-                new RegistryBuilder<SkyboxType<? extends AbstractSkybox>>().setMaxID(Integer.MAX_VALUE - 1).onAdd((owner, stage, id, key, obj, old) ->
-                        FabricSkyBoxesClient.LOGGER.info("SkyboxType Added: " + key.location() + " ")
-                ).setDefaultKey(new ResourceLocation(FabricSkyBoxesClient.MODID, "null"))
-        );
         REGISTER.register(bus);
     }
 

@@ -3,13 +3,12 @@ package vice.customskyboxes.resource;
 import com.google.common.base.Preconditions;
 import com.google.gson.*;
 import com.mojang.serialization.JsonOps;
-import net.minecraft.resources.ResourceLocation;
-import net.minecraft.server.packs.resources.*;
-import net.minecraftforge.registries.RegistryObject;
+import net.minecraft.server.packs.resources.Resource;
+import net.minecraft.server.packs.resources.ResourceManager;
+import net.minecraft.server.packs.resources.ResourceManagerReloadListener;
 import vice.customskyboxes.FabricSkyBoxesClient;
 import vice.customskyboxes.SkyboxManager;
 import vice.customskyboxes.skyboxes.AbstractSkybox;
-import vice.customskyboxes.skyboxes.MonoColorSkybox;
 import vice.customskyboxes.skyboxes.SkyboxType;
 import vice.customskyboxes.util.JsonObjectWrapper;
 import vice.customskyboxes.util.object.internal.Metadata;
@@ -38,9 +37,33 @@ public class SkyboxResourceListener implements ResourceManagerReloadListener
 
         FabricSkyBoxesClient.LOGGER.info("decoded metadata for " + id);
 
-        System.out.println(SkyboxType.SkyboxTypes.get(new ResourceLocation(FabricSkyBoxesClient.MODID, "single_sprite_square_texture")));
+        SkyboxType<? extends AbstractSkybox> type;
 
-        SkyboxType<? extends AbstractSkybox> type = SkyboxType.SkyboxTypes.get(metadata.getType()).get();
+        String skyboxTypeString;
+
+        if(metadata.getType().toString().contains("_")) {
+            skyboxTypeString = metadata.getType().toString().replace('_', '-');
+        } else {
+            skyboxTypeString = metadata.getType().toString();
+        }
+
+        if ((FabricSkyBoxesClient.MODID + ":" + SkyboxType.MONO_COLOR_SKYBOX.get().getName()).equals(skyboxTypeString)) {
+            type = SkyboxType.MONO_COLOR_SKYBOX.get();
+        } else if ((FabricSkyBoxesClient.MODID + ":" + SkyboxType.ANIMATED_SQUARE_TEXTURED_SKYBOX.get().getName()).equals(skyboxTypeString)) {
+            type = SkyboxType.ANIMATED_SQUARE_TEXTURED_SKYBOX.get();
+        } else if ((FabricSkyBoxesClient.MODID + ":" + SkyboxType.SINGLE_SPRITE_ANIMATED_SQUARE_TEXTURED_SKYBOX.get().getName()).equals(skyboxTypeString)) {
+            type = SkyboxType.SINGLE_SPRITE_ANIMATED_SQUARE_TEXTURED_SKYBOX.get();
+        } else if ((FabricSkyBoxesClient.MODID + ":" + SkyboxType.SINGLE_SPRITE_SQUARE_TEXTURED_SKYBOX.get().getName()).equals(skyboxTypeString)) {
+            type = SkyboxType.SINGLE_SPRITE_SQUARE_TEXTURED_SKYBOX.get();
+        } else if ((FabricSkyBoxesClient.MODID + ":" + SkyboxType.SQUARE_TEXTURED_SKYBOX.get().getName()).equals(skyboxTypeString)) {
+            type = SkyboxType.SQUARE_TEXTURED_SKYBOX.get();
+        } else {
+            type = null;
+        }
+
+        if(type == null) {
+            return null;
+        }
 
         Preconditions.checkNotNull(type, "Unknown skybox type: " + metadata.getType().getPath().replace('_', '-'));
         if (metadata.getSchemaVersion() == 1) {
